@@ -44,6 +44,22 @@ def prepare_movie_hash(movie_id)
 		end
 	end
 	movie_hash['cast'] = cast_list.join(", ")
+	
+	directors = Array.new 
+	screenwriters = Array.new
+	casts_request['crew'].each do |crew|
+		if crew['job'] == "Director" then
+			directors.push(crew['name'])
+		elsif crew['job'] == "Screenplay" then
+			screenwriters.push(crew['name'])
+		end
+	end
+	if directors.length > 0 then
+		movie_hash['director'] = directors.join(", ")
+	end
+	if screenwriters.length > 0 then
+		movie_hash['screenwriter'] = screenwriters. join(", ")
+	end
 
 	trailer_json = request_json("movie/" + movie_id.to_s + "/videos")
 	if trailer_json['results'].length > 0
