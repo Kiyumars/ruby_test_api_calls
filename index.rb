@@ -48,13 +48,10 @@ def get_five_topbilled_actors(casts_request, movie_hash)
 	return movie_hash
 end
 
-def get_casts_info(movie_hash, movie_id)
-	casts_request = request_json("movie/" + movie_id.to_s + "/casts")
+
+def get_directors_and_screenwriters(casts_request, movie_hash)
 	directors = Array.new 
 	screenwriters = Array.new
-	
-	get_five_topbilled_actors(casts_request, movie_hash)	
-
 	casts_request['crew'].each do |crew|
 		if crew['job'] == "Director" then
 			directors.push(crew['name'])
@@ -62,12 +59,25 @@ def get_casts_info(movie_hash, movie_id)
 			screenwriters.push(crew['name'])
 		end
 	end
+
 	if directors.length > 0 then
 		movie_hash['director'] = directors.join(", ")
 	end
+	
 	if screenwriters.length > 0 then
 		movie_hash['screenwriter'] = screenwriters. join(", ")
 	end
+
+	return movie_hash
+end
+
+
+def get_casts_info(movie_hash, movie_id)
+	casts_request = request_json("movie/" + movie_id.to_s + "/casts")
+	
+	get_five_topbilled_actors(casts_request, movie_hash)	
+	get_directors_and_screenwriters(casts_request, movie_hash)
+	
 	return movie_hash
 end
 
