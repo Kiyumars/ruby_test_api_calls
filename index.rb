@@ -33,7 +33,6 @@ def get_basic_movie_info(movie_hash, movie_id)
 	if basic_info['poster_path'] != nil
 		movie_hash['poster_path'] = "http://image.tmdb.org/t/p/w500" + basic_info['poster_path']
 	end
-	return movie_hash
 end
 
 
@@ -45,7 +44,6 @@ def get_five_topbilled_actors(casts_request, movie_hash)
 		end
 	end
 	movie_hash['cast'] = cast_list.join(", ")
-	return movie_hash
 end
 
 
@@ -63,12 +61,10 @@ def get_directors_and_screenwriters(casts_request, movie_hash)
 	if directors.length > 0 then
 		movie_hash['director'] = directors.join(", ")
 	end
-	
+
 	if screenwriters.length > 0 then
 		movie_hash['screenwriter'] = screenwriters. join(", ")
 	end
-
-	return movie_hash
 end
 
 
@@ -76,15 +72,13 @@ def get_casts_info(movie_hash, movie_id)
 	casts_request = request_json("movie/" + movie_id.to_s + "/casts")
 	
 	get_five_topbilled_actors(casts_request, movie_hash)	
-	get_directors_and_screenwriters(casts_request, movie_hash)
-	
-	return movie_hash
+	get_directors_and_screenwriters(casts_request, movie_hash)	
 end
 
 
 def get_videos(movie_hash, movie_id)
 	videos_json = request_json("movie/" + movie_id.to_s + "/videos")
-	if videos_json['results'].length > 0
+	if videos_json['results'].length > 0 then
 		videos_json['results'].each do |video|
 			if video['type'] == "Trailer" then
 				movie_hash['trailer'] = "https://www.youtube.com/watch?v=" + video['key']
