@@ -44,23 +44,28 @@ def get_five_topbilled_actors(casts_request, movie_hash)
 end
 
 
+def determine_and_push_to_directors_or_screenwriters(crew, directors, screenwriters)
+	if crew['job'] == "Director" then
+		directors.push(crew['name'])
+	elsif crew['job'] == "Screenplay" then
+		screenwriters.push(crew['name'])
+	end
+end
+
+
 def get_directors_and_screenwriters(casts_request, movie_hash)
 	directors = Array.new 
 	screenwriters = Array.new
 	casts_request['crew'].each do |crew|
-		if crew['job'] == "Director" then
-			directors.push(crew['name'])
-		elsif crew['job'] == "Screenplay" then
-			screenwriters.push(crew['name'])
-		end
+		determine_and_push_to_directors_or_screenwriters(crew, directors, screenwriters)
 	end
 
 	if directors.length > 0 then
-		movie_hash['director'] = directors.join(", ")
+		movie_hash['directors'] = directors.join(", ")
 	end
 
 	if screenwriters.length > 0 then
-		movie_hash['screenwriter'] = screenwriters. join(", ")
+		movie_hash['screenwriters'] = screenwriters. join(", ")
 	end
 end
 
@@ -73,16 +78,21 @@ def get_casts_info(movie_hash, movie_id)
 end
 
 
+def add_trailer_or_featurette_to_moviehash(videos_json, movie_hash)
+	videos_json['results'].each do |video|
+		if video['type'] == "Trailer" then
+			movie_hash['trailer'] = "https://www.youtube.com/watch?v=" + video['key']
+		elsif video['type'] == "Featurette" then
+			movie_hash['featurette'] = "https://www.youtube.com/watch?v=" + video['key']
+		end
+	end
+end
+
+
 def get_videos(movie_hash, movie_id)
 	videos_json = request_tmdb_json("movie/" + movie_id.to_s + "/videos")
 	if videos_json['results'].length > 0 then
-		videos_json['results'].each do |video|
-			if video['type'] == "Trailer" then
-				movie_hash['trailer'] = "https://www.youtube.com/watch?v=" + video['key']
-			elsif video['type'] == "Featurette" then
-				movie_hash['featurette'] = "https://www.youtube.com/watch?v=" + video['key']
-			end
-		end
+		add_trailer_or_featurette_to_moviehash(videos_json, movie_hash)
 	end
 end
 
@@ -131,7 +141,7 @@ def check_if_rt_scores_exist_and_return(imdb_movie_id)
 		puts imdb_movie_id
 		return false
 	end
-	if critics_score < 0 or critics_score == nil then
+	if critics_score < 0 or critics_score.nil? then
 		puts "No reviews"
 		puts imdb_movie_id
 		return false
@@ -146,6 +156,7 @@ def check_if_six_reviews_exist(rt_movie_id)
 	request_url = "http://api.rottentomatoes.com/api/public/v1.0/movies/"
 	request_url += rt_movie_id.to_s + "/reviews.json?"
 	request_url += "apikey=" + RT_key
+	request_url += "&review_type=all"
 
 	resp = Net::HTTP.get_response(URI(request_url))
 	total_reviews = JSON(resp.body)['total']
@@ -168,6 +179,8 @@ def add_rt_info(imdb_movie_id, movie_hash)
 
 	if ! check_if_six_reviews_exist(rt_movie_id) then
 		puts "Less than six reviews"
+		puts imdb_movie_id
+
 		return false
 	end
 	
@@ -175,12 +188,21 @@ def add_rt_info(imdb_movie_id, movie_hash)
 end
 
 
+def get_actor_url_parameter_for_tmdb(actor_name_list)
+	url_parameter = "&query="
+	actor_name_list.each do |name|
+		url_parameter += name + "+"
+	end
+	puts url_parameter
+	return url_parameter
+end
+
 puts "Enter actor."
-# actor_query = gets.chomp.downcase
-# actor_name = actor_query.split(" ")
-# actor_parameter = "&query=" + actor_name[0] + "+" + actor_name[-1]
-# puts actor_parameter
-actor_parameter = "&query=matt+damon"
+actor_query = gets.chomp.downcase
+actor_name_list = actor_query.split(" ")
+actor_parameter = get_actor_url_parameter_for_tmdb(actor_name_list)
+puts actor_parameter
+# actor_parameter = "&query=john+cazale"
 actor_filmography = search_tmdb_for_actor_and_filmography(actor_parameter)
 movie_ids_list = Array.new
 
