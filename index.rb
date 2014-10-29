@@ -7,6 +7,22 @@ TMDB_key = ENV['tmdb_key']
 RT_key = ENV['rt_key']
 
 
+def start_test()
+	actor_name_list = ask_player_for_actor_name()
+	actor_parameter = prepare_actor_url_parameter_for_tmdb(actor_name_list)
+	# actor_parameter = "&query=john+cazale"
+	actor_filmography = search_tmdb_for_actor_and_filmography(actor_parameter)
+	find_and_print_tmdb_movie_info(actor_filmography)
+end
+
+
+def ask_player_for_actor_name()
+	puts "Enter actor."
+	actor_query = gets.chomp.downcase
+	actor_name_list = actor_query.split(" ")
+end
+
+
 def request_tmdb_json(request_type_url, extra_url='')
 	request_url = "http://api.themoviedb.org/3/"
 	request_url += request_type_url
@@ -188,7 +204,7 @@ def add_rt_info(imdb_movie_id, movie_hash)
 end
 
 
-def get_actor_url_parameter_for_tmdb(actor_name_list)
+def prepare_actor_url_parameter_for_tmdb(actor_name_list)
 	url_parameter = "&query="
 	actor_name_list.each do |name|
 		url_parameter += name + "+"
@@ -197,23 +213,23 @@ def get_actor_url_parameter_for_tmdb(actor_name_list)
 	return url_parameter
 end
 
-puts "Enter actor."
-actor_query = gets.chomp.downcase
-actor_name_list = actor_query.split(" ")
-actor_parameter = get_actor_url_parameter_for_tmdb(actor_name_list)
-puts actor_parameter
-# actor_parameter = "&query=john+cazale"
-actor_filmography = search_tmdb_for_actor_and_filmography(actor_parameter)
-movie_ids_list = Array.new
 
-actor_filmography['cast'].each do |movie_dict|
-	movie_ids_list.push(movie_dict['id'])
+def find_and_print_tmdb_movie_info(actor_filmography)
+	movie_ids_list = Array.new
+
+	actor_filmography['cast'].each do |movie_dict|
+		movie_ids_list.push(movie_dict['id'])
+	end
+
+	movie_ids_list.each do |movie_id|
+		prepare_movie_hash(movie_id)
+	end
 end
 
-movie_ids_list.each do |movie_id|
-	prepare_movie_hash(movie_id)
-end
 
+
+start_test()
 ##See if you replace the TMDB casts function with a RT casts function
-##I can gets the casts info from the first RT json request. that saves making
-##a separate request to TMDB. But I can not get the writers from RT
+##I can receive the casts info from the first RT json request. That saves making
+##a separate request to TMDB. 
+#But I can not get the writers from RT. That requires a TMDB request
